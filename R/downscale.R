@@ -247,7 +247,7 @@ downscale <- function(xyz, which_refmap = "auto",
         max_run = max_run,
         cache = cache,
         run_nm = run_nm,
-        fast = TRUE
+        fast = interactive()
       )
     } else {
       gcm_ssp_ts <- NULL

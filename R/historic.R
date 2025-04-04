@@ -44,78 +44,16 @@ input_obs <- function(dbCon, bbox = NULL, period = list_obs_periods(), cache = T
 
   dbcode <- dbnames2$dbname[dbnames2$PERIOD %in% period]
 
-  ## check cached
-  needDownload <- TRUE
-
-  cPath <- file.path(cache_path(), "obs", dbcode)
-
-  if (dir.exists(cPath)) {
-    bnds <- try(fread(file.path(cPath, "meta_area.csv")), silent = TRUE)
-
-    if (is(bnds, "try-error")) {
-      ## try to get the data again
-      message(
-        "Metadata file no longer exists or is unreadable.",
-        " Downloading the data again"
-      )
-    } else {
-      needDownload <- FALSE
-    }
-  }
-
-  if (!needDownload) {
-    setorder(bnds, -numlay)
-    for (i in 1:nrow(bnds)) {
-      isin <- is_in_bbox(bbox, matrix(bnds[i, 2:5]))
-      if (isin) break
-    }
-    if (isin) {
-      oldid <- bnds$uid[i]
-      periods <- fread(file.path(cPath, "meta_period.csv"))
-      if (all(period %in% periods[uid == oldid, period])) {
-        message("Retrieving from cache...")
-        hist_rast <- rast(file.path(cPath, paste0(oldid, ".tif")))
-        hist_rast <- list(hist_rast)
-        attr(hist_rast, "builder") <- "climr"
-        names(hist_rast) <- period
-      } else {
-        message("Not fully cached :( Will download more")
-        needDownload <- TRUE
-      }
-    } else {
-      message("Not fully cached :( Will download more")
-      needDownload <- TRUE
-    }
-  }
-
-  if (needDownload) {
-    q <- paste0("select var_nm, laynum from historic_layers where period in ('", paste(period, collapse = "','"), "')")
-    # print(q)
-    layerinfo <- db_safe_query(q)
-    message("Downloading observed period anomalies")
-    hist_rast <- pgGetTerra(dbCon, dbcode, tile = FALSE, bands = layerinfo$laynum, boundary = bbox)
-    names(hist_rast) <- layerinfo$var_nm
-
-    if (cache) {
-      message("Caching data...")
-      uid <- UUIDgenerate()
-      dir.create(cPath, recursive = TRUE, showWarnings = FALSE)
-
-      writeRaster(hist_rast, file.path(cPath, paste0(uid, ".tif")))
-      rastext <- ext(hist_rast)
-      t1 <- data.table(
-        uid = uid, ymax = rastext[4], ymin = rastext[3], xmax = rastext[2], xmin = rastext[1],
-        numlay = nlyr(hist_rast)
-      )
-      t2 <- data.table(uid = rep(uid, length(period)), period = period)
-      fwrite(t1, file = file.path(cPath, "meta_area.csv"), append = TRUE)
-      fwrite(t2, file = file.path(cPath, "meta_period.csv"), append = TRUE)
-    }
-
-    hist_rast <- list(hist_rast)
-    attr(hist_rast, "builder") <- "climr"
-    names(hist_rast) <- period
-  }
+  q <- paste0("select var_nm, laynum from historic_layers where period in ('", paste(period, collapse = "','"), "')")
+  # print(q)
+  layerinfo <- db_safe_query(q)
+  message("Downloading observed period anomalies")
+  hist_rast <- pgGetTerra(dbCon, dbcode, bands = layerinfo$laynum, boundary = bbox, cache = cache)
+  names(hist_rast) <- layerinfo$var_nm
+  
+  hist_rast <- list(hist_rast)
+  attr(hist_rast, "builder") <- "climr"
+  names(hist_rast) <- period
 
   return(hist_rast)
 }
@@ -234,85 +172,14 @@ process_one_historicts <- function(dataset, years, dbCon, bbox, dbnames = dbname
     ts_name <- dataset
     dbcode <- dbnames$dbname[dbnames$dataset == dataset]
 
-    ## check cached
-    needDownload <- TRUE
+    q <- paste0("select var_nm, period, laynum from ", dbcode, "_layers where period in ('", paste(years, collapse = "','"), "')")
+    # print(q)
+    layerinfo <- db_safe_query(q)
+    message("Downloading obs anomalies")
+    hist_rast <- pgGetTerra(dbCon, dbcode, bands = layerinfo$laynum, boundary = bbox, cache = cache)
+    names(hist_rast) <- paste(ts_name, layerinfo$var_nm, layerinfo$period, sep = "_")
 
-    cPath <- file.path(cache_path(), "obs_ts", ts_name)
-
-    if (dir.exists(cPath)) {
-      bnds <- try(fread(file.path(cPath, "meta_area.csv")), silent = TRUE)
-
-      if (is(bnds, "try-error")) {
-        ## try to get the data again
-        message(
-          "Metadata file no longer exists or is unreadable.",
-          " Downloading the data again"
-        )
-      } else {
-        needDownload <- FALSE
-      }
-    }
-
-    if (!needDownload) {
-      setorder(bnds, -numlay)
-
-      spat_match <- lapply(1:nrow(bnds), FUN = function(x){
-        if (is_in_bbox(bbox, matrix(bnds[x, 2:5]))) bnds$uid[x]
-      })
-      spat_match <- spat_match[!sapply(spat_match, is.null)]
-      if (length(spat_match) > 0) {
-        periods <- fread(file.path(cPath, "meta_period.csv"))
-        isin <- FALSE
-        for (oldid in spat_match) {
-          if (all(years %in% periods[uid == oldid, period])) {
-            isin <- TRUE
-            break
-          }
-        }
-
-        if (isin) {
-          message("Retrieving from cache...")
-          hist_rast <- rast(file.path(cPath, paste0(oldid, ".tif")))
-          hist_rast <- hist_rast[[grep(paste(years, collapse = "|"), names(hist_rast))]]
-          return(hist_rast)
-          # hist_rast <- list(hist_rast)
-          # attr(hist_rast, "builder") <- "climr"
-          # names(hist_rast) <- paste(years[1], tail(years, 1), sep = ":")
-        } else {
-          message("Not fully cached :( Will download more")
-          needDownload <- TRUE
-        }
-      } else {
-        message("Not fully cached :( Will download more")
-        needDownload <- TRUE
-      }
-    }
-
-    if (needDownload) {
-      q <- paste0("select var_nm, period, laynum from ", dbcode, "_layers where period in ('", paste(years, collapse = "','"), "')")
-      # print(q)
-      layerinfo <- db_safe_query(q)
-      message("Downloading obs anomalies")
-      hist_rast <- pgGetTerra(dbCon, dbcode, tile = FALSE, bands = layerinfo$laynum, boundary = bbox)
-      names(hist_rast) <- paste(ts_name, layerinfo$var_nm, layerinfo$period, sep = "_")
-
-      if (cache) {
-        message("Caching data...")
-        uid <- UUIDgenerate()
-        dir.create(cPath, recursive = TRUE, showWarnings = FALSE)
-
-        writeRaster(hist_rast, file.path(cPath, paste0(uid, ".tif")))
-        rastext <- ext(hist_rast)
-        t1 <- data.table(
-          uid = uid, ymax = rastext[4], ymin = rastext[3], xmax = rastext[2], xmin = rastext[1],
-          numlay = nlyr(hist_rast)
-        )
-        t2 <- data.table(uid = rep(uid, length(years)), period = years)
-        fwrite(t1, file = file.path(cPath, "meta_area.csv"), append = TRUE)
-        fwrite(t2, file = file.path(cPath, "meta_period.csv"), append = TRUE)
-      }
-      return(hist_rast)
-    }
+    return(hist_rast)
   }
 }
 

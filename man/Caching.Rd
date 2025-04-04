@@ -27,7 +27,8 @@ Attempts to delete all folder/files in \code{cache_path()}.
 }
 \details{
 By default, it uses \code{\link[tools:userdir]{tools::R_user_dir()}}. The cache location can be
-set using the \code{climr.cache.path} option with \code{options("climr.cache.path" = "your_path")}.
+set using the \code{climr.cache.path} option with \code{options("climr.cache.path" = "your_path")} or
+use environment variable \code{CLIMR_CACHE_PATH}.
 
 It may fail if R has no permission to delete files/folders
 in the \code{cache_path()} directory

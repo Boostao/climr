@@ -1,12 +1,11 @@
 #' Download raster with bounding box from PostGIS
 #' @template conn
 #' @param name character. Table name in database.
-#' @param tile Logical. Retrieve data in tiles to avoid overloading the database?
 #' @param rast character. Name of column which stores raster data.
 #'   Defaults to "rast"
 #' @template bands
 #' @template boundary
-
+#' @template cache
 #' @return A `SpatRaster`
 #'
 #' @importFrom data.table setDT copy
@@ -14,20 +13,8 @@
 #' @importFrom RPostgres dbQuoteIdentifier dbGetQuery
 #' @importFrom DBI dbQuoteIdentifier dbGetQuery
 #' @export
-pgGetTerra <- function(conn, name, tile, rast = "rast", bands = 37:73,
-                       boundary) {
-  ## Check and prepare the schema.name
-  # if(grepl("refmap",name)){
-  #   if(name == "refmap_climatena"){
-  #     name1 <- "normal_na"
-  #   }else if(name == "refmap_prism"){
-  #     name1 <- "normal_bc"
-  #   }else{
-  #     name1 <- "normal_composite"
-  #   }
-  # }else{
-  #   name1 <- name
-  # }
+pgGetTerra <- function(conn, name, rast = "rast", bands = 37:73,
+                       boundary, cache = TRUE) {
 
   name1 <- name
   nameque <- paste(name1, collapse = ".")
@@ -59,16 +46,35 @@ pgGetTerra <- function(conn, name, tile, rast = "rast", bands = 37:73,
       st_ymax(st_envelope(rast)) as ymx,
       st_ymin(st_envelope(rast)) as ymn,
       st_width(rast) as cols,
-      st_height(rast) as rows
+      st_height(rast) as rows,
+      st_numbands(rast) as nbands,
+      ST_AsText(ST_ConvexHull(rast)) as hull 
     from \"%s\"
     WHERE rid IN (%s)" |> sprintf(nameque, paste(rids$rid, collapse = ","))
   )
   
   bandqs1 <- bands |>
     paste0(collapse = ",") |>
-    sprintf(fmt ="UNNEST((ST_Dumpvalues(rast, ARRAY[%s])).valarray::real[][]) as vals")
+    sprintf(fmt ="UNNEST((ST_Dumpvalues(rast, ARRAY[%s], true)).valarray::real[][]) as vals")
+  
+  if (isTRUE(cache)) {
+    cPath <- file.path(cache_path(), name)
+    dir.create(cPath, recursive = TRUE, showWarnings = FALSE)
+    bandqs1 <- "UNNEST((ST_Dumpvalues(rast, NULL::integer[], true)).valarray::real[][]) as vals"
+  }
   
   out_list <- lapply(rids$rid, \(rid) {
+    if (isTRUE(cache)) {
+      ridpath <- file.path(cPath, "%s.tif" |> sprintf(rid))
+      if (file.exists(ridpath)) {
+        return(
+          terra::rast(
+            x = file.path(cPath, "%s.tif" |> sprintf(rid)),
+            lyrs = bands
+          )
+        )
+      }
+    }
     info_tl <- info[info$id == rid,]
     qry2 <- "
       select %s
@@ -80,11 +86,22 @@ pgGetTerra <- function(conn, name, tile, rast = "rast", bands = 37:73,
       warning("Empty tile - not enough data")
       return(NULL)
     }
-    terra::rast(
+    r <- terra::rast(
       nrows = info_tl$rows, ncols = info_tl$cols, xmin = info_tl$xmn,
-      xmax = info_tl$xmx, ymin = info_tl$ymn, ymax = info_tl$ymx, nlyrs = length(bands),
+      xmax = info_tl$xmx, ymin = info_tl$ymn, ymax = info_tl$ymx, nlyrs = {if (isTRUE(cache)) info_tl$nbands else length(bands)},
       crs = paste0("EPSG:", 4326), vals = r_values
     )
+    if (isTRUE(cache)) {
+      terra::writeRaster(
+        x = r,
+        filename = ridpath,
+        gdal=c("PREDICTOR=2"),
+        datatype="FLT4S",
+        overwrite = TRUE
+      )
+      r <- terra::rast(x = ridpath, lyrs = bands)
+    }
+    return(r)
   })
   
   rsrc <- terra::sprc(out_list)

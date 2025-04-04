@@ -4,14 +4,12 @@
 \alias{pgGetTerra}
 \title{Download raster with bounding box from PostGIS}
 \usage{
-pgGetTerra(conn, name, tile, rast = "rast", bands = 37:73, boundary)
+pgGetTerra(conn, name, rast = "rast", bands = 37:73, boundary, cache = TRUE)
 }
 \arguments{
 \item{conn}{a DBI or RPostgres connection object.}
 
 \item{name}{character. Table name in database.}
-
-\item{tile}{Logical. Retrieve data in tiles to avoid overloading the database?}
 
 \item{rast}{character. Name of column which stores raster data.
 Defaults to "rast"}
@@ -19,6 +17,8 @@ Defaults to "rast"}
 \item{bands}{numeric. Which raster bands to return. Default 37:73.}
 
 \item{boundary}{numeric. Vector of length 4 (ymax,ymin,xmax,xmin). Defaults to \code{NULL}.}
+
+\item{cache}{logical. Specifying whether to cache new data locally or no. Defaults to \code{TRUE}.}
 }
 \value{
 A \code{SpatRaster}
