@@ -61,7 +61,12 @@ data_con <- function(profile = .globals[["sessprof"]]$list()) {
   profile <- match.arg(profile)
   con <- .globals[["sesscon"]]$get(profile)
   if (is.null(con)) {
-    con <- do.call(RPostgres::dbConnect, .globals[["sessprof"]]$get(profile))
+    con <- tryCatch({
+      do.call(RPostgres::dbConnect, .globals[["sessprof"]]$get(profile))
+    }, error = \(e) {
+      warning("Could not establish connection to database: ", conditionMessage(e))
+      return(NULL) 
+    })
     if (!is.null(.globals[["last_xyz"]])) {
       write_xyz(.globals[["last_xyz"]])
     }
