@@ -90,3 +90,60 @@ cache_clear <- function(what = c("gcms", "gcmts", "gcmhist", "reference", "obs",
     return(TRUE)
   }
 }
+
+# Retrieve object from cache
+#' @noRd
+cache_get <- function(what, tbl, cache = TRUE) {
+  
+  dbCon <- data_con()
+
+  # Early exit if no cache and no database connection
+  if (!cache && is.null(dbCon)) {
+    stop("Could not connect to database.")
+  }
+  
+  if (cache) {
+    # Define cache file path once
+    cache_file <- file.path(cache_path(), what, sprintf("%s.rds", tbl))
+    
+    # Check cache existence and database connection
+    if (!file.exists(cache_file)) {
+      if (is.null(dbCon)) stop("No local cache found and could not connect to database.")
+      return(fetch_and_cache(tbl, cache_file))
+    }
+    
+    # Read cached data
+    res <- readRDS(cache_file)
+    
+    # Update cache if database is newer
+    if (!is.null(dbCon)) {
+      lastmod <- fetch_last_modified(tbl)
+      if (lastmod > attr(res, "last_modified")) {
+        return(fetch_and_cache(tbl, cache_file))
+      }
+    }
+    return(res)
+  }
+  
+  # Fetch directly from database if cache is disabled
+  "SELECT * FROM %s" |> sprintf(tbl) |> db_safe_query()
+}
+
+# Helper function to fetch data and cache it
+#' @noRd
+fetch_and_cache <- function(tbl, cache_file) {
+  res <- "SELECT * FROM %s" |> sprintf(tbl) |> db_safe_query()
+  lastmod <- fetch_last_modified(tbl)
+  attr(res, "last_modified") <- lastmod
+  saveRDS(res, cache_file)
+  res
+}
+
+# Helper function to get last modified timestamp
+#' @noRd
+fetch_last_modified <- function(tbl) {
+  res <- "SELECT last_modified FROM table_modification_log WHERE table_name = '%s'" |>
+    sprintf(tbl) |>
+    db_safe_query()
+  res$last_modified
+}

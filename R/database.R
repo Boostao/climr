@@ -80,6 +80,7 @@ write_xyz <- function(xyz) {
   db_safe_write("tmp_xyz", xyz, temporary = TRUE, overwrite = TRUE)
   db_safe_exec("ALTER TABLE tmp_xyz ADD COLUMN IF NOT EXISTS geom GEOMETRY(Point, 4326)")
   db_safe_exec("UPDATE tmp_xyz SET geom = ST_SetSRID(ST_MakePoint(lon, lat), 4326)")
+  db_safe_exec("CREATE INDEX idx_tmp_xyz_id ON tmp_xyz (id);")
   return(xyz)
 }
 
@@ -207,14 +208,16 @@ with_retries <- function(expr, retries = 5L, xyz = NULL) {
   attempt <- 1L
   while (attempt <= retries) {
     no_error <- TRUE
+    msg <- character()
     res <- tryCatch(
       eval.parent(substitute(expr)),
       error = function(e) {
-        message("Database connection issue.")
+        msg <<- conditionMessage(e)
         no_error <<- FALSE
       }
     )
     if (no_error) break
+    message("Caught error: ", msg)
     message(paste("Retrying attempt", attempt, "in", 3^attempt, "seconds."))
     Sys.sleep(3^attempt)
     attempt <- attempt + 1L

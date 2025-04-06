@@ -59,6 +59,7 @@ CREATE TABLE table_modification_log (
     table_name TEXT PRIMARY KEY,
     last_modified TIMESTAMP
 );")
+dbExecute(con, "GRANT SELECT ON table_modification_log TO PUBLIC;")
 
 DBI::dbExecute(con, "
 CREATE OR REPLACE FUNCTION update_last_modified()

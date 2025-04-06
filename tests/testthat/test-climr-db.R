@@ -24,7 +24,7 @@ test_that("test ts tables", {
   
 })
 
-test_that("test that all constraints have been set on raster tables", {
+test_that("test that all constraints have been set on raster tables from data_processing/climr_raster_table_constraints.R", {
   testInit("data.table")
   
   dbCon <- climr::data_con()

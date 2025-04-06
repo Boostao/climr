@@ -112,7 +112,7 @@ test_that("testing that the custom bilinear function works", {
   
   # Test tiles interpolation using normal_composite
   q1 <- "
-  CREATE TABLE tmp_xyz AS (
+  CREATE TEMP TABLE tmp_xyz AS (
     WITH tmp_xyz_1 AS (
       SELECT ST_SetSRID(ST_MAKEPOINT(ST_UpperLeftX(rast), ST_UpperLeftY(rast)), 4326) AS g0,
              ST_PixelWidth(rast) AS pw,

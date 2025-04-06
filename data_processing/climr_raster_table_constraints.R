@@ -1,5 +1,22 @@
 # Find all raster tables (two columns table rid + rast)
 
+new_table_constraints <- function(table_name, table_schema = "public") {
+  climr:::.globals[["sessprof"]]$set("adm", list(
+    host = '146.190.244.244',
+    user = 'postgres',
+    password = 'climr2022'
+  ))
+  con <- climr::data_con("adm")
+  on.exit(climr::connections_clear())
+  climr:::with_retries(
+    DBI::dbExecute(
+      climr::data_con(),
+      "SELECT AddRasterConstraints('%s'::name,'%s'::name,'rast'::name);" |> sprintf(table_schema, table_name)
+    )
+  )
+}
+new_table_constraints("new_table_name")
+
 library(data.table)
 
 climr:::.globals[["sessprof"]]$set("adm", list(

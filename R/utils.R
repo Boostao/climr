@@ -235,6 +235,11 @@ extract_db <- function(
       layers[["laynum"]] |> paste0(collapse = ",") |> sprintf(fmt ="ARRAY[%s]")
     }
   }
+  
+  nxyz <- db_safe_query("SELECT COUNT(1) FROM tmp_xyz")[[1]]
+  # Do not use hull if only one point
+  if (nxyz < 2) hull <- NULL
+  
   q <- paste0("
     WITH pixel_sizes as (
       SELECT pw,
@@ -398,7 +403,7 @@ extract_db <- function(
   
   data.table::setcolorder(res, colorder)
   
-  if (nrow(res) != {nxyz <- db_safe_query("SELECT COUNT(1) FROM tmp_xyz")[[1]]}) {
+  if (nrow(res) != nxyz) {
     warning(
       "Extraction from [%s] returned [%s] rows and requested geometries has [%s]. Filled with missing values" |> 
         sprintf(rastertbl[1], nrow(res), nxyz)
