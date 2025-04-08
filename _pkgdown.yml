@@ -65,7 +65,6 @@ reference:
   - cache_clear
   - cache_path
   - data_connect
-  - pgGetTerra
 - title: "Utilities"
   desc: >
     Other useful functions

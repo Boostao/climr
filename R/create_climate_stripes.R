@@ -24,10 +24,7 @@
 #'
 #' @export
 create_climate_stripes <- function(dt, mode = c("warming_stripes", "labelled_stripes", "bars", "bars_with_scale")) {
-  
-  #Remove NSE CRAN check warnings
-  if (FALSE){ x <- y <- marker_color  <- NULL}
-  
+
   mode <- match.arg(mode)
   
   # options
@@ -108,9 +105,6 @@ create_climate_stripes_input <- function(xyz = NULL,
                                  cache = TRUE, 
                                  downscale_results = NULL,
                                  ...){
-  
-  #Remove NSE CRAN check warnings
-  if (FALSE){ x <- y <- Tave <-  avg_temp <- NULL}
   
   vars <- c("Tave")
   

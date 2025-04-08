@@ -51,8 +51,6 @@
 #' @template run_nm
 #' @param cache logical. Cache data locally? Default `TRUE`
 #' @param local logical. Is the postgres database local? Default `FALSE`
-#' @param indiv_tiles logical. Only download necessary tiles instead of full bounding box?
-#' This will generally be faster, but doesn't cache.
 #' @param ... other arguments passed to [`downscale_core()`]. Namely: `return_refperiod`,
 #'   `vars`, `out_spatial` and `plot`
 #'   
@@ -114,7 +112,6 @@ downscale <- function(xyz, which_refmap = "auto",
                       run_nm = NULL,
                       cache = TRUE,
                       local = FALSE,
-                      indiv_tiles = FALSE,
                       ...) {
   message("Welcome to climr!")
 
@@ -167,7 +164,7 @@ downscale <- function(xyz, which_refmap = "auto",
 
   message("Getting normals...")
   if(which_refmap %in% c("refmap_climatena","refmap_prism","refmap_climr")) {
-    reference <- input_refmap(dbCon = dbCon, reference = which_refmap, bbox = thebb, cache = cache, indiv_tiles = indiv_tiles, xyz = xyz)
+    reference <- input_refmap(reference = which_refmap, cache = cache)
   } else {
     if (inherits(xyz, "SpatRaster")) {
       refmapchck <- \(rf, bb) {
@@ -191,7 +188,7 @@ downscale <- function(xyz, which_refmap = "auto",
       if (!refmapchck("normal_composite", thebb)) { 
         reference <- "refmap_climatena"
       }
-      reference <- input_refmap(dbCon = dbCon, reference = reference, bbox = thebb, cache = cache, indiv_tiles = indiv_tiles, xyz = xyz)
+      reference <- input_refmap(reference = reference, cache = cache)
     } else {
       # message("Normals not specified, using highest resolution available for each point")
       rastFile <- system.file("extdata", "bc_outline.tif", package = "climr")
@@ -207,29 +204,26 @@ downscale <- function(xyz, which_refmap = "auto",
         xyz <- xyz[!is.na(pnts[[2]]), ]
         thebb_bc <- get_bb(xyz)
         message("for BC...")
-        reference <- input_refmap(dbCon = dbCon, reference = "refmap_prism", bbox = thebb_bc, cache = cache, indiv_tiles = indiv_tiles, xyz = xyz)
+        reference <- input_refmap(reference = "refmap_prism", cache = cache)
       } else {
-        reference <- input_refmap(dbCon = dbCon, reference = "refmap_climatena", bbox = thebb, cache = cache, indiv_tiles = indiv_tiles, xyz = xyz)
+        reference <- input_refmap(reference = "refmap_climatena", cache = cache)
       }
     }
   }
 
   if (!is.null(obs_periods)) {
     message("Getting observed anomalies...")
-    obs_periods <- input_obs(dbCon, bbox = thebb, period = obs_periods, cache = cache)
+    obs_periods <- input_obs(period = obs_periods, cache = cache)
   }
   if (!is.null(obs_years)) {
-    obs_years <- input_obs_ts(dbCon,
-      dataset = obs_ts_dataset,
-      bbox = thebb, years = obs_years, cache = cache
-    )
+    obs_years <- input_obs_ts(dataset = obs_ts_dataset, years = obs_years, cache = cache)
   }
 
   if (!is.null(gcms)) {
     if (!is.null(gcm_periods)) {
       message("Getting GCMs...")
-      gcm_ssp_periods <- input_gcms(dbCon,
-        bbox = thebb, gcms = gcms,
+      gcm_ssp_periods <- input_gcms(
+        gcms = gcms,
         ssps = ssps,
         period = gcm_periods,
         max_run = max_run,
@@ -240,21 +234,20 @@ downscale <- function(xyz, which_refmap = "auto",
       gcm_ssp_periods <- NULL
     }
     if (!is.null(gcm_ssp_years)) {
-      gcm_ssp_ts <- input_gcm_ssp(dbCon,
-        bbox = thebb, gcms = gcms,
+      gcm_ssp_ts <- input_gcm_ssp(
+        gcms = gcms,
         ssps = ssps,
         years = gcm_ssp_years,
         max_run = max_run,
-        cache = cache,
         run_nm = run_nm,
-        fast = interactive()
+        cache = cache
       )
     } else {
       gcm_ssp_ts <- NULL
     }
     if (!is.null(gcm_hist_years)) {
-      gcm_hist_ts <- input_gcm_hist(dbCon,
-        bbox = thebb, gcms = gcms,
+      gcm_hist_ts <- input_gcm_hist(
+        gcms = gcms,
         years = gcm_hist_years,
         max_run = max_run,
         run_nm = run_nm,
@@ -293,7 +286,7 @@ downscale <- function(xyz, which_refmap = "auto",
     na_xyz <- xyz_save[!xyz_save[, 4] %in% bc_ids, ]
     thebb <- get_bb(na_xyz)
     message("Now North America...")
-    reference <- input_refmap(dbCon = dbCon, reference = "refmap_climatena", bbox = thebb, cache = cache, indiv_tiles = indiv_tiles, xyz = xyz)
+    reference <- input_refmap(reference = "refmap_climatena", cache = cache)
 
     results_na <- downscale_core(
       xyz = na_xyz,
@@ -355,7 +348,7 @@ downscale_db <- function(
   }
 
   if(which_refmap %in% c("refmap_climatena","refmap_prism","refmap_climr")){
-    reference <- input_refmap_db(reference = which_refmap)
+    reference <- input_refmap(reference = which_refmap, raster = FALSE)
   } else {
     # message("Normals not specified, using highest resolution available for each point")
     rastFile <- system.file("extdata", "bc_outline.tif", package = "climr")
@@ -369,51 +362,53 @@ downscale_db <- function(
     if (length(bc_ids) >= 1) {
       xyz_save <- xyz
       xyz <- xyz[!is.na(pnts[[2]]), ]
-      reference <- input_refmap_db(reference = "refmap_prism")
+      reference <- input_refmap(reference = "refmap_prism", raster = FALSE)
     } else {
-      reference <- input_refmap_db(reference = "refmap_climatena")
+      reference <- input_refmap(reference = "refmap_climatena", raster = FALSE)
     }
   }
 
   if (!is.null(obs_periods)) {
-    obs_periods <- input_obs_db(dbCon = dbCon, period = obs_periods)
+    obs_periods <- input_obs(period = obs_periods, raster = FALSE)
   }
   if (!is.null(obs_years)) {
-    obs_years <- input_obs_ts_db(dbCon = dbCon, dataset = obs_ts_dataset, years = obs_years)
+    obs_years <- input_obs_ts(dataset = obs_ts_dataset, years = obs_years, raster = FALSE)
   }
 
   if (!is.null(gcms)) {
     if (!is.null(gcm_periods)) {
-      gcm_ssp_periods <- input_gcms_db(
-        dbCon = dbCon,
+      gcm_ssp_periods <- input_gcms(
         gcms = gcms,
         ssps = ssps,
         period = gcm_periods,
         max_run = max_run,
-        run_nm = run_nm
+        run_nm = run_nm,
+        raster = FALSE
       )
     } else {
       gcm_ssp_periods <- NULL
     }
     if (!is.null(gcm_ssp_years)) {
-      gcm_ssp_ts <- input_gcm_ssp_db(
+      gcm_ssp_ts <- input_gcm_ssp(
         dbCon = dbCon,
         gcms = gcms,
         ssps = ssps,
         years = gcm_ssp_years,
         max_run = max_run,
-        run_nm = run_nm
+        run_nm = run_nm,
+        raster = FALSE
       )
     } else {
       gcm_ssp_ts <- NULL
     }
     if (!is.null(gcm_hist_years)) {
-      gcm_hist_ts <- input_gcm_hist_db(
+      gcm_hist_ts <- input_gcm_hist(
         dbCon = dbCon,
         gcms = gcms,
         years = gcm_hist_years,
         max_run = max_run,
-        run_nm = run_nm
+        run_nm = run_nm,
+        raster = FALSE
       )
     } else {
       gcm_hist_ts <- NULL
@@ -440,7 +435,7 @@ downscale_db <- function(
   if (which_refmap != "auto" || length(bc_ids) < 1 || length(bc_ids) == nrow(xyz_save)) return(results)
   
   na_xyz <- xyz_save[!xyz_save[, 4] %in% bc_ids, ]
-  reference <- input_refmap_db(reference = "refmap_climatena")
+  reference <- input_refmap(reference = "refmap_climatena", raster = FALSE)
   
   write_xyz(na_xyz)
 

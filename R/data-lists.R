@@ -8,12 +8,13 @@
 #' @rdname data-option-lists
 #' @export
 list_gcms <- function() {
-  c(
-    "ACCESS-ESM1-5", "BCC-CSM2-MR", "CanESM5", "CNRM-ESM2-1", "EC-Earth3",
-    "GFDL-ESM4", "GISS-E2-1-G", "INM-CM5-0", "IPSL-CM6A-LR", "MIROC6",
-    "MPI-ESM1-2-HR", "MRI-ESM2-0", "UKESM1-0-LL"
-  )
-  # sort(dbGetQuery(dbCon, "SELECT DISTINCT mod FROM esm_layers_ts")[,1])
+  res <- .globals[["cache"]][["list_gcms"]]
+  if (is.null(res)) {
+    res <- cache_get("esm_layers_period")
+    res <- sort(unique(res[["mod"]]))
+    .globals[["cache"]][["list_gcms"]] <- res
+  }
+  return(res)
 }
 
 #' @description
@@ -22,8 +23,13 @@ list_gcms <- function() {
 #' @rdname data-option-lists
 #' @export
 list_ssps <- function() {
-  # sort(dbGetQuery(dbCon, "SELECT DISTINCT scenario FROM esm_layers")[,1])
-  c("ssp126", "ssp245", "ssp370", "ssp585")
+  res <- .globals[["cache"]][["list_ssps"]]
+  if (is.null(res)) {
+    res <- cache_get("esm_layers_period")
+    res <- sort(unique(res[["scenario"]]))
+    .globals[["cache"]][["list_ssps"]] <- res
+  }
+  return(res)
 }
 
 #' @description
@@ -32,8 +38,13 @@ list_ssps <- function() {
 #' @rdname data-option-lists
 #' @export
 list_gcm_periods <- function() {
-  # sort(dbGetQuery(dbCon, "SELECT DISTINCT period FROM esm_layers")[,1])
-  c("2001_2020", "2021_2040", "2041_2060", "2061_2080", "2081_2100")
+  res <- .globals[["cache"]][["list_gcm_periods"]]
+  if (is.null(res)) {
+    res <- cache_get("esm_layers_period")
+    res <- sort(unique(res[["period"]]))
+    .globals[["cache"]][["list_gcm_periods"]] <- res
+  }
+  return(res)
 }
 
 
@@ -46,8 +57,14 @@ list_gcm_periods <- function() {
 #' 
 #' @rdname data-option-lists
 #' @export
-list_runs_ssp <- function(gcm, ssp){
-  .globals[["gcm_period_runs"]][mod %in% gcm & scenario %in% ssp, run]
+list_runs_ssp <- function(gcm, ssp) {
+  res <- .globals[["cache"]][["list_runs_ssp"]]
+  if (is.null(res)) {
+    res <- cache_get("esm_layers_period") |> data.table::setDT()
+    res <- unique(res[,list(mod, scenario, run)])
+    .globals[["cache"]][["list_runs_ssp"]] <- res
+  }
+  res[mod %in% gcm & scenario %in% ssp, sort(unique(run))]
 }
 
 #' @description
@@ -59,7 +76,13 @@ list_runs_ssp <- function(gcm, ssp){
 #' @rdname data-option-lists
 #' @export
 list_runs_historic <- function(gcm){
-  .globals[["gcm_hist_runs"]][mod %in% gcm, run]
+  res <- .globals[["cache"]][["list_runs_historic"]]
+  if (is.null(res)) {
+    res <- cache_get("esm_layers_hist") |> data.table::setDT()
+    res <- unique(res[,list(mod, run)])
+    .globals[["cache"]][["list_runs_historic"]] <- res
+  }
+  res[mod %in% gcm, sort(unique(run))]  
 }
 
 #' @description
@@ -86,7 +109,13 @@ list_refmaps <- function() {
 #' @rdname data-option-lists
 #' @export
 list_obs_periods <- function() {
-  return("2001_2020")
+  res <- .globals[["cache"]][["list_obs_periods"]]
+  if (is.null(res)) {
+    res <- cache_get("historic_layers")
+    res <- sort(unique(res[["period"]]))
+    .globals[["cache"]][["list_obs_periods"]] <- res
+  }
+  return(res)
 }
 
 #' @description
@@ -98,9 +127,6 @@ list_obs_periods <- function() {
 #' @rdname data-option-lists
 #' @export
 list_vars <- function(set = c("All", "Monthly", "Seasonal", "Annual"), only_extra = FALSE) {
-  if (FALSE) {
-    variables <- NULL
-  }
   set <- match.arg(set, several.ok = TRUE)
   if ("All" %in% set) {
     res <- climr::variables[["Code"]]
@@ -120,7 +146,15 @@ list_vars <- function(set = c("All", "Monthly", "Seasonal", "Annual"), only_extr
 #' @rdname data-option-lists
 #' @export
 list_obs_years <- function() {
-  1901:2023
+  res <- .globals[["cache"]][["list_obs_years"]]
+  if (is.null(res)) {
+    res <- lapply(dbnames_hist_obs[["dbname"]], \(x) {
+      res <- "%s_layers" |> sprintf(x) |> cache_get()
+      sort(unique(res[["period"]]))
+    }) |> unlist() |> unique() |> sort()
+    .globals[["cache"]][["list_obs_years"]] <- res
+  }
+  return(res)
 }
 
 #' @description
@@ -129,7 +163,13 @@ list_obs_years <- function() {
 #' @rdname data-option-lists
 #' @export
 list_gcm_ssp_years <- function() {
-  2015:2100
+  res <- .globals[["cache"]][["list_gcm_ssp_years"]]
+  if (is.null(res)) {
+    res <- cache_get("esm_layers_ts")
+    res <- sort(unique(res[["period"]]))
+    .globals[["cache"]][["list_gcm_ssp_years"]] <- res
+  }
+  return(res)
 }
 
 #' @description
@@ -138,5 +178,11 @@ list_gcm_ssp_years <- function() {
 #' @rdname data-option-lists
 #' @export
 list_gcm_hist_years <- function() {
-  1851:2015
+  res <- .globals[["cache"]][["list_gcm_hist_years"]]
+  if (is.null(res)) {
+    res <- cache_get("esm_layers_hist")
+    res <- sort(unique(res[["year"]]))
+    .globals[["cache"]][["list_gcm_hist_years"]] <- res
+  }
+  return(res)
 }

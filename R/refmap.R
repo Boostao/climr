@@ -6,8 +6,11 @@
 #'
 #' @template reference
 #' @template cache
+#' @template raster
 #'
-#' @return An input list, with two nodes, `tbl` and `layers`, suitable for `extract_rast_tbl`.
+#' @return A `SpatRaster` containing reference period climatologies, lapse rates
+#'   and digital elevation model layers, that can be used with [`downscale_core()`].
+#'   If `raster` is `FALSE`, an input list defining data source, `tbl` and `layers`.
 #'
 #' @details
 #' The first 36 layers of the output raster correspond with the actual climate variables. The raster also contains
@@ -19,10 +22,11 @@
 #' @import data.table
 #' @rdname input_refmap
 #' @export
-input_refmap <- function(reference = "refmap_climr", cache = TRUE) {
-  
-  #Remove NSE CRAN check warnings
-  if (FALSE){ var_nm <- laynum <- NULL}
+input_refmap <- function(
+  reference = "refmap_climr",
+  cache = TRUE,
+  raster = TRUE
+){
   
   rmap_nm <- reference
   if (!grepl("normal", reference)) {
@@ -54,6 +58,11 @@ input_refmap <- function(reference = "refmap_climr", cache = TRUE) {
     tbl = rmap_nm,
     layers = layers
   )
+  
+  if (isTRUE(raster)) {
+    res <- cache_tif(res, cache)
+  }
+  
   attr(res, "builder") <- "climr"
   return(res)
   

@@ -11,8 +11,9 @@ input_gcms(
   ssps = list_ssps(),
   period = list_gcm_periods(),
   max_run = 0L,
+  run_nm = NULL,
   cache = TRUE,
-  run_nm = NULL
+  raster = TRUE
 )
 
 input_gcm_hist(
@@ -28,8 +29,9 @@ input_gcm_ssp(
   ssps = list_ssps(),
   years = 2020:2030,
   max_run = 0L,
+  run_nm = NULL,
   cache = TRUE,
-  run_nm = NULL
+  raster = TRUE
 )
 }
 \arguments{
@@ -46,9 +48,11 @@ Can be obtained from \code{\link[=list_gcm_periods]{list_gcm_periods()}}. Defaul
 A value of 0 returns the \code{ensembleMean} only. Runs are included in the order they
 are found in the models data until \code{max_run} is reached. Defaults to 0L.}
 
+\item{run_nm}{character. \code{NULL} or length >= 1. Name of specified run(s) to return, instead of using \code{max_run}. Use the \verb{list_runs_*()} functions to list available runs.Defaults to \code{NULL}.}
+
 \item{cache}{logical. Specifying whether to cache new data locally or no. Defaults to \code{TRUE}.}
 
-\item{run_nm}{character. \code{NULL} or length >= 1. Name of specified run(s) to return, instead of using \code{max_run}. Use the \verb{list_runs_*()} functions to list available runs.Defaults to \code{NULL}.}
+\item{raster}{logical. Specifying whether to return raster or just the data source. Defaults to \code{TRUE}.}
 
 \item{years}{Numeric or character vector in \code{2020:2100}. Defaults to \code{2020:2030}.
 See \code{\link[=list_gcm_ssp_years]{list_gcm_ssp_years()}} for available years.}
@@ -58,6 +62,11 @@ See \code{\link[=list_gcm_ssp_years]{list_gcm_ssp_years()}} for available years.
 \value{
 A \code{list} of \code{SpatRasters}, each with possibly multiple layers, that can
 be used with \code{\link[=downscale_core]{downscale_core()}}.
+
+This function returns a list with one slot for each requested GCM. Rasters inside the
+list contain anomalies for all requested SSPs, runs, and periods. In general this function should
+only be used in combination with \code{\link[=downscale_core]{downscale_core()}}. If \code{raster} is \code{FALSE}, an input list
+defining data source, \code{tbl} and \code{layers}.
 
 An input list, with two nodes, \code{tbl} and \code{layers}, suitable for \code{extract_rast_tbl}.
 
@@ -74,8 +83,6 @@ years and runs.
 years and runs.
 }
 \details{
-An input list, with two nodes, \code{tbl} and \code{layers}, suitable for \code{extract_rast_tbl}.
-
 This function returns a list with one slot for each requested GCM. Rasters inside the list contain anomalies for all runs and years.
 In general this function should only be used in combination with \code{\link[=downscale_core]{downscale_core()}}.
 

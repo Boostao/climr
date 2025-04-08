@@ -121,6 +121,7 @@ init_globals <- function() {
   .globals[["sessprof"]] <- session_profiles()
   .globals[["sessprof"]]$set(nm = "climr-db-use", args = list(host = "146.190.244.244", user = "climr_client", password = "PowerOfBEC2023"))
   .globals[["sessprof"]]$set(nm = "local", args = list(host = "localhost", user = "postgres", password = "climrserver"))
+  .globals[["cache"]] <- list()
 }
 
 #' @importFrom RPostgres dbGetQuery

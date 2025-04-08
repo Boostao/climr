@@ -42,10 +42,7 @@
 #' @importFrom ggplot2 ggplot aes geom_boxplot xlab ylab theme_classic
 #' @export
 create_boxplot <- function(dt, var = c("Tmax", "Tmin", "PPT", "Tave")){
-  
-  #Remove CRAN check warnings
-  if (FALSE) { variable <- value <- NULL}
-  
+
   setDT(dt)
   
   var_nm <- sprintf("%s_%02d", match.arg(var), 1:12)

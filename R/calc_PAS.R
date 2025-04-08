@@ -13,9 +13,5 @@
 #' @export
 #' @rdname climatevar
 calc_PAS <- function(m, tave, PPT) {
-  if (FALSE) {
-    T0 <- a <- b <- NULL
-  }
-
   param[["PAS"]][m, PPT * a / (1 + exp(-(tave - T0) / b))]
 }

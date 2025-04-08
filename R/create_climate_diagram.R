@@ -29,11 +29,6 @@
 #' 
 create_climate_diagram <- function(temp, precip, elev = NULL){
   
-  #Remove CRAN check warnings
-  if (FALSE) {
-    y_temp <- y_precip <- y_100 <- x <- y <- NULL
-  }
-
   stopifnot(length(temp)==12)
   stopifnot(length(precip)==12)
   stopifnot(!anyNA(c(temp, precip)))

@@ -12,8 +12,5 @@
 #' @export
 #' @rdname climatevar
 calc_NFFD <- function(m, tmin) {
-  if (FALSE) {
-    a <- T0 <- b <- NULL
-  }
   param[["NFFD"]][m, a / (1 + exp(-(tmin - T0) / b))]
 }

@@ -4,7 +4,7 @@
 \alias{input_refmap}
 \title{Retrieve reference period climate maps}
 \usage{
-input_refmap(reference = "refmap_climr", cache = TRUE)
+input_refmap(reference = "refmap_climr", cache = TRUE, raster = TRUE)
 }
 \arguments{
 \item{reference}{A \code{character} or a \code{SpatRaster}. For character, label of the normal baseline to use.
@@ -12,9 +12,13 @@ Can be obtained from \code{\link[=list_refmaps]{list_refmaps()}}. For \code{Spat
 names PPT01:PPT12, Tmax01:Tmax12 and Tmin01:Tmin12. Defaults to \code{list_refmaps()[1]}.}
 
 \item{cache}{logical. Specifying whether to cache new data locally or no. Defaults to \code{TRUE}.}
+
+\item{raster}{logical. Specifying whether to return raster or just the data source. Defaults to \code{TRUE}.}
 }
 \value{
-An input list, with two nodes, \code{tbl} and \code{layers}, suitable for \code{extract_rast_tbl}.
+A \code{SpatRaster} containing reference period climatologies, lapse rates
+and digital elevation model layers, that can be used with \code{\link[=downscale_core]{downscale_core()}}.
+If \code{raster} is \code{FALSE}, an input list defining data source, \code{tbl} and \code{layers}.
 }
 \description{
 This function downloads (or retrieves from cache) monthly Tmin, Tmax, and PPT climatologies (maps of long-term average climate)

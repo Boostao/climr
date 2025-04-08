@@ -5,12 +5,13 @@
 \alias{input_obs_ts}
 \title{Retrieve observational anomalies.}
 \usage{
-input_obs(period = list_obs_periods(), cache = TRUE)
+input_obs(period = list_obs_periods(), cache = TRUE, raster = TRUE)
 
 input_obs_ts(
   dataset = c("cru.gpcc", "climatena"),
   years = 2010:2022,
-  cache = TRUE
+  cache = TRUE,
+  raster = TRUE
 )
 }
 \arguments{
@@ -18,6 +19,8 @@ input_obs_ts(
 Can be obtained from \code{\link[=list_obs_periods]{list_obs_periods()}}. Default to "2001_2020".}
 
 \item{cache}{logical. Specifying whether to cache new data locally or no. Defaults to \code{TRUE}.}
+
+\item{raster}{logical. Specifying whether to return raster or just the data source. Defaults to \code{TRUE}.}
 
 \item{dataset}{Character. Which observational dataset to use? Options are \code{"climatena"} for the
 ClimateNA gridded time series or \code{"cru.gpcc"} for the combined Climatic Research Unit TS dataset
@@ -27,15 +30,19 @@ ClimateNA gridded time series or \code{"cru.gpcc"} for the combined Climatic Res
 See \code{\link[=list_obs_years]{list_obs_years()}} for available years.}
 }
 \value{
-An input list, with two nodes, \code{tbl} and \code{layers}, suitable for \code{extract_rast_tbl}.
+A \code{list} of \code{SpatRasters}, each with possibly multiple layers, that can
+be used with \code{\link[=downscale_core]{downscale_core()}}. Each element of the list corresponds to a particular period,
+and the values of the \code{SpatRaster} are anomalies of the obs period compare to the reference
+period. If \code{raster} is \code{FALSE}, an input list defining data source, \code{tbl} and \code{layers}.
 
-An input list, with two nodes, \code{tbl} and \code{layers}, suitable for \code{extract_rast_tbl}.
+List of length 1 containing a \code{SpatRaster}. If \code{raster} is \code{FALSE}, an input list
+defining data source, \code{tbl} and \code{layers}.
 }
 \description{
 \code{input_obs} produces anomalies of the average observed climate for a given \strong{period},
-relative to the 1961-1990 reference period. The anomalies are calculated from the \code{"cru.gpcc"} dataset
-which is the Climatic Research Unit TS dataset (for temperature) and Global Precipitation Climatology Centre dataset
-(for precipitation).
+relative to the 1961-1990 reference period. The anomalies are calculated from the \code{"cru.gpcc"}
+dataset which is the Climatic Research Unit TS dataset (for temperature) and Global Precipitation
+Climatology Centre dataset (for precipitation).
 
 \code{input_obs_ts} produces anomalies of observed climate for a given \strong{time series} of individual years.
 }

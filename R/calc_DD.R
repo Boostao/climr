@@ -38,10 +38,6 @@ calc_DD_m_below <- function(tm, k, a, b, t0, beta, c) {
 #' @rdname climatevar
 #' @keywords internal
 calc_DD_below_0 <- function(m, tm) {
-  if (FALSE) {
-    Month <- k <- a <- b <- T0 <- beta <- c <- NULL
-  }
-
   param[["DD_lt_0"]][m, calc_DD_m_below(
     tm = tm,
     k = k,
@@ -61,10 +57,6 @@ calc_DD_below_0 <- function(m, tm) {
 #' @export
 #' @rdname climatevar
 calc_DD_above_5 <- function(m, tm, region) {
-  if (FALSE) {
-    Month <- Region <- k <- a <- b <- T0 <- beta <- c <- NULL
-  }
-
   if (m %in% 5:10) {
     region <- "All"
   }
@@ -88,10 +80,6 @@ calc_DD_above_5 <- function(m, tm, region) {
 #' @export
 #' @rdname climatevar
 calc_DD_below_18 <- function(m, tm) {
-  if (FALSE) {
-    Month <- k <- a <- b <- T0 <- beta <- c <- NULL
-  }
-
   param[["DD_lt_18"]][m, calc_DD_m_below(
     tm = tm,
     k = k,
@@ -112,10 +100,6 @@ calc_DD_below_18 <- function(m, tm) {
 #' @export
 #' @rdname climatevar
 calc_DD_above_18 <- function(m, tm, region) {
-  if (FALSE) {
-    Month <- Region <- k <- a <- b <- T0 <- beta <- c <- NULL
-  }
-
   if (m %in% 6:9) {
     region <- "All"
   }

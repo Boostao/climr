@@ -190,7 +190,6 @@ get_elev_raster <- function(r, elev, out = NULL, ...) {
 
 
 #' Bilinear interpolation point extraction from raster bands
-#' @param dbCon A postgres database connection.
 #' @param rastertbl The name of the raster table to extract from.
 #' @param layers A data.table with column `var_nm` (names of the bands) and
 #' @param VAR In case of rasters split across different tables. One VAR in each.
@@ -205,14 +204,11 @@ get_elev_raster <- function(r, elev, out = NULL, ...) {
 #' @keywords internal
 #' @export
 extract_db <- function(
-  dbCon,
   rastertbl,
   layers = data.table::data.table(var_nm = character(), laynum = integer()),
   VAR = NULL,
   hull = NULL
 ) {
-  #Remove NSE CRAN check warnings
-  if (FALSE){ band <- NULL}
   
   colorder <- c("ID", layers[["var_nm"]])
   layers <- layers[order(laynum)]

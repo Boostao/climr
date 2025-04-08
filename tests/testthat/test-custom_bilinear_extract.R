@@ -80,7 +80,6 @@ test_that("testing that the custom bilinear function works", {
   # Query to get results from both the custom function and ST_Value
   bands <- c(3:1,10:8)
   results_1 <- extract_db(
-    dbCon,
     "test_rasters",
     data.table::data.table(
       var_nm = as.character(bands),
@@ -164,7 +163,6 @@ test_that("testing that the custom bilinear function works", {
   
   bands <- c(6,18,30,42,54,66)
   results_1 <- extract_db(
-    dbCon,
     "normal_composite",
     data.table::data.table(
       var_nm = paste("value", bands, sep = "_"),

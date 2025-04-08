@@ -116,7 +116,6 @@ downscale_db_ <- function(
   # Offload to database
   message("Extracting [%s] bands from %s"|> sprintf(format(nrow(refmap[["layers"]]), big.mark = ","), refmap[["tbl"]]))
   res <- extract_db(
-    dbCon = dbCon,
     rastertbl = refmap[["tbl"]],
     layers = refmap[["layers"]],
     hull = attr(xyz, "hull")
@@ -282,7 +281,6 @@ process_one_climate_db <- function(
   # Run in database
   message("Extracting [%s] bands from %s"|> sprintf(format(nrow(r[["layers"]]), big.mark = ","), r[["tbl"]]))
   climaterast <- extract_db(
-    dbCon = dbCon,
     rastertbl = r[["tbl"]],
     layers = r[["layers"]],
     VAR = r[["VAR"]],

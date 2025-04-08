@@ -2,15 +2,19 @@
 #'
 #' @description
 #' `input_obs` produces anomalies of the average observed climate for a given **period**,
-#' relative to the 1961-1990 reference period. The anomalies are calculated from the `"cru.gpcc"` dataset
-#' which is the Climatic Research Unit TS dataset (for temperature) and Global Precipitation Climatology Centre dataset
-#' (for precipitation).
+#' relative to the 1961-1990 reference period. The anomalies are calculated from the `"cru.gpcc"`
+#' dataset which is the Climatic Research Unit TS dataset (for temperature) and Global Precipitation
+#' Climatology Centre dataset (for precipitation).
 #'
-#' @return An input list, with two nodes, `tbl` and `layers`, suitable for `extract_rast_tbl`.
+#' @return A `list` of `SpatRasters`, each with possibly multiple layers, that can
+#'   be used with [`downscale_core()`]. Each element of the list corresponds to a particular period,
+#'   and the values of the `SpatRaster` are anomalies of the obs period compare to the reference
+#'   period. If `raster` is `FALSE`, an input list defining data source, `tbl` and `layers`.
 #'
 #' @param period character. Vector of labels of the periods to use.
 #'   Can be obtained from [`list_obs_periods()`]. Default to "2001_2020".
 #' @template cache
+#' @template raster
 #'
 #' @seealso [downscale_core()], [`list_obs_periods()`]
 #' @details
@@ -20,10 +24,11 @@
 #' @import data.table
 #' @rdname hist-input-data
 #' @export
-input_obs <- function(period = list_obs_periods(), cache = TRUE) {
-  
-  #Remove NSE CRAN check warnings
-  if (FALSE) { var_nm <- laynum <- period <- NULL}
+input_obs <- function(
+  period = list_obs_periods(),
+  cache = TRUE,
+  raster = TRUE
+){
   
   dbnames2 <- structure(list(
     PERIOD = c("2001_2020"),
@@ -40,6 +45,11 @@ input_obs <- function(period = list_obs_periods(), cache = TRUE) {
     tbl = dbcode,
     layers = layerinfo
   ))
+  
+  if (isTRUE(raster)) {
+    res <- cache_tif(res, cache)
+  }
+  
   attr(res, "builder") <- "climr"
   return(res)
   
@@ -56,18 +66,21 @@ input_obs <- function(period = list_obs_periods(), cache = TRUE) {
 #' @template cache
 #' @param years numeric. Years to retrieve obs anomalies for. Defaults to `2010:2022`.
 #'   See [`list_obs_years()`] for available years.
-#' @return An input list, with two nodes, `tbl` and `layers`, suitable for `extract_rast_tbl`.
+#' @return List of length 1 containing a `SpatRaster`. If `raster` is `FALSE`, an input list
+#' defining data source, `tbl` and `layers`.
 #' @details
 #' The returned raster contains anomalies for each year specified in `years`. In general this
 #' function should only be used in conjunction with [`downscale_core()`].
 #' @import data.table
 #' @rdname hist-input-data
 #' @export
-input_obs_ts <- function(dataset = c("cru.gpcc", "climatena"), years = 2010:2022, cache = TRUE) {
+input_obs_ts <- function(
+  dataset = c("cru.gpcc", "climatena"),
+  years = 2010:2022,
+  cache = TRUE,
+  raster = TRUE
+){
 
-  #Remove NSE CRAN check warnings
-  if (FALSE){ var_nm <- period <- laynum <- NULL}
-  
   res <- lapply(dataset, function(d) {
     if (is.na(m <- match(d, dbnames_hist_obs$dataset))) return(NULL)
     dbcode <- dbnames_hist_obs[["dbname"]][m]
@@ -77,6 +90,11 @@ input_obs_ts <- function(dataset = c("cru.gpcc", "climatena"), years = 2010:2022
   })
   
   res <- res[!sapply(res, is.null)] ## remove NULL
+  
+  if (isTRUE(raster)) {
+    res <- cache_tif(res, cache)
+  }
+  
   attr(res, "builder") <- "climr"
   return(res)
   
