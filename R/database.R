@@ -1,63 +1,9 @@
-#' Connect to PostGIS database
-#'
-#' @return pool object of database connection
-#' @param local A logical. Use a local database. Default `FALSE`.
-#' @importFrom pool dbPool
-#' @importFrom RPostgres Postgres
-#'
-#' @export
-data_connect <- function(local = FALSE) {
-  if(local){
-    pool <- dbPool(
-      drv = Postgres(),
-      dbname = "climr",
-      host = "localhost",
-      port = 5432,
-      user = "postgres",
-      password = "climrserver"
-    )
-  }else{
-    pool <- tryCatch(
-      {
-        dbPool(
-          drv = Postgres(),
-          dbname = "climr",
-          host = "146.190.244.244",
-          port = 5432,
-          user = "climr_client",
-          password = "PowerOfBEC2023"
-        )
-      },
-      error = function(e) {
-        tryCatch(
-          {
-            dbPool(
-              drv = Postgres(),
-              dbname = "climr",
-              host = "146.190.244.244",
-              port = 5432,
-              user = "climr_client",
-              password = "PowerOfBEC2023"
-            )
-          },
-          error = function(f) {
-            warning("Could not connect to database. Will try using cached data.")
-            NULL
-          }
-        )
-      }
-    )
-  }
-  
-  return(pool)
-}
-
 #' List connections in cache
 #' @param profile Either `climr-db-user` or `local`.
-#' @rdname data_con
-#' @importFrom utils modifyList
+#' @rdname data_connect
+#' @importFrom RPostgres dbConnect
 #' @export
-data_con <- function(profile = .globals[["sessprof"]]$list()) {
+data_connect <- function(profile = .globals[["sessprof"]]$list()) {
   profile <- match.arg(profile)
   con <- .globals[["sesscon"]]$get(profile)
   if (is.null(con)) {
@@ -85,6 +31,7 @@ write_xyz <- function(xyz) {
 }
 
 #' @noRd
+#' @importFrom RPostgres dbGetQuery dbDisconnect
 session_connections <- function() {
   connections <- list()
   active <- TRUE
@@ -118,6 +65,8 @@ session_connections <- function() {
 }
 
 #' @noRd
+#' @importFrom RPostgres Postgres
+#' @importFrom utils modifyList
 session_profiles <- function() {
   profiles <- list()
   last <- NULL
@@ -150,14 +99,14 @@ session_profiles <- function() {
 }
 
 #' List connections in cache
-#' @rdname data_con
+#' @rdname data_connect
 #' @export
 connections <- function() {
   .globals[["sesscon"]]$list()
 }
 
 #' Clear connections in cache
-#' @rdname data_con
+#' @rdname data_connect
 #' @export
 connections_clear <- function() {
   .globals[["sesscon"]]$clear()
@@ -198,7 +147,7 @@ db_safe_write <- function(name, value, ...) {
 #' @noRd
 db_safe <- function(f, ...) {
   with_retries(
-    f(conn = data_con(), ...)
+    f(conn = data_connect(), ...)
   )
 }
 

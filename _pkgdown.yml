@@ -57,12 +57,6 @@ reference:
   - input_gcm_hist
   - input_obs
   - input_obs_ts
-  - input_refmap_db
-  - input_gcms_db
-  - input_gcm_ssp_db
-  - input_gcm_hist_db
-  - input_obs_db
-  - input_obs_ts_db
 - title: "Database and caching"
   desc: > 
     Functions for interacting with the PostGIS server
@@ -71,7 +65,6 @@ reference:
   - cache_clear
   - cache_path
   - data_connect
-  - data_con
   - pgGetTerra
 - title: "Utilities"
   desc: >

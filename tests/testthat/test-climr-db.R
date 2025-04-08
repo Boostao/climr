@@ -1,7 +1,7 @@
 test_that("test ts tables", {
   testInit("data.table")
   
-  dbCon <- climr::data_con()
+  dbCon <- climr::data_connect()
   
   t <- expand.grid(
     tbl = climr:::dbnames_ts$dbname,
@@ -27,7 +27,7 @@ test_that("test ts tables", {
 test_that("test that all constraints have been set on raster tables from data_processing/climr_raster_table_constraints.R", {
   testInit("data.table")
   
-  dbCon <- climr::data_con()
+  dbCon <- climr::data_connect()
   
   # Identify all raster tables (mirroring your script's logic)
   target_tb <- DBI::dbGetQuery(dbCon, "
@@ -103,7 +103,7 @@ test_that("test that all constraints have been set on raster tables from data_pr
   if (length(missing_constraints) > 0) {
     cat("\n")
     cat("Raster tables missing constraints: %s\n" |> sprintf(paste(missing_constraints, collapse = ", ")))
-    cat("Run `DBI::dbExecute(climr::data_con(), \"SELECT AddRasterConstraints('%s'::name, '%s'::name, 'rast'::name);\", schema, table)` for each missing table.\n" |> 
+    cat("Run `DBI::dbExecute(climr::data_connect(), \"SELECT AddRasterConstraints('%s'::name, '%s'::name, 'rast'::name);\", schema, table)` for each missing table.\n" |> 
           sprintf(target_tb[full_name %in% missing_constraints, table_schema], 
                   target_tb[full_name %in% missing_constraints, table_name]))
   }
@@ -119,7 +119,7 @@ test_that("test that all constraints have been set on raster tables from data_pr
 test_that("test that all tables have last modified trigger set from data_processing/climr_lastmodified_tracking_table.R", {
   testInit("data.table")
   
-  dbCon <- climr::data_con()
+  dbCon <- climr::data_connect()
   # Tables that needs triggers
   tb <- DBI::dbGetQuery(dbCon, "
      SELECT table_name 

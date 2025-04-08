@@ -2,30 +2,18 @@
 % Please edit documentation in R/historic.R
 \name{input_obs}
 \alias{input_obs}
-\alias{input_obs_db}
 \alias{input_obs_ts}
-\alias{input_obs_ts_db}
 \title{Retrieve observational anomalies.}
 \usage{
-input_obs(dbCon, bbox = NULL, period = list_obs_periods(), cache = TRUE)
-
-input_obs_db(dbCon, period = list_obs_periods())
+input_obs(period = list_obs_periods(), cache = TRUE)
 
 input_obs_ts(
-  dbCon,
   dataset = c("cru.gpcc", "climatena"),
-  bbox = NULL,
   years = 2010:2022,
   cache = TRUE
 )
-
-input_obs_ts_db(dbCon, dataset = c("cru.gpcc", "climatena"), years = 2010:2022)
 }
 \arguments{
-\item{dbCon}{A db connection object created by \code{data_connect}.}
-
-\item{bbox}{numeric. Vector of length 4 giving bounding box of study region, in the order ymax,ymin,xmax,xmin. In general this is created by \code{get_bb()}, but can also be user-defined.}
-
 \item{period}{character. Vector of labels of the periods to use.
 Can be obtained from \code{\link[=list_obs_periods]{list_obs_periods()}}. Default to "2001_2020".}
 
@@ -39,11 +27,9 @@ ClimateNA gridded time series or \code{"cru.gpcc"} for the combined Climatic Res
 See \code{\link[=list_obs_years]{list_obs_years()}} for available years.}
 }
 \value{
-A \code{list} of \code{SpatRasters}, each with possibly multiple layers, that can
-be used with \code{\link[=downscale_core]{downscale_core()}}. Each element of the list corresponds to a particular period, and the
-values of the \code{SpatRaster} are anomalies of the obs period compare to the reference period.
+An input list, with two nodes, \code{tbl} and \code{layers}, suitable for \code{extract_rast_tbl}.
 
-List of length 1 containing a \code{SpatRaster}
+An input list, with two nodes, \code{tbl} and \code{layers}, suitable for \code{extract_rast_tbl}.
 }
 \description{
 \code{input_obs} produces anomalies of the average observed climate for a given \strong{period},

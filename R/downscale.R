@@ -162,7 +162,7 @@ downscale <- function(xyz, which_refmap = "auto",
     xyz[, id_orig := NULL]
   }
 
-  dbCon <- data_con(if (local) "local")
+  dbCon <- data_connect(if (local) "local")
   thebb <- get_bb(xyz) ## get bounding box based on input points
 
   message("Getting normals...")
@@ -346,7 +346,7 @@ downscale_db <- function(
       terra::convHull() |>
       terra::geom(wkt = TRUE)
   }
-  dbCon <- data_con(if (local) "local")
+  dbCon <- data_connect(if (local) "local")
  
   rmCols <- setdiff(names(xyz), expectedCols)
   if (length(rmCols)) { ## remove extraneous columns

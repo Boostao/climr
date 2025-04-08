@@ -2,77 +2,37 @@
 % Please edit documentation in R/gcm.R
 \name{input_gcms}
 \alias{input_gcms}
-\alias{input_gcms_db}
 \alias{input_gcm_hist}
-\alias{input_gcm_hist_db}
 \alias{input_gcm_ssp}
-\alias{input_gcm_ssp_db}
 \title{Retrieve global climate model anomalies for \code{downscale_core}.}
 \usage{
 input_gcms(
-  dbCon,
-  bbox = NULL,
   gcms = list_gcms(),
   ssps = list_ssps(),
   period = list_gcm_periods(),
   max_run = 0L,
   cache = TRUE,
-  run_nm = NULL
-)
-
-input_gcms_db(
-  dbCon,
-  gcms = list_gcms(),
-  ssps = list_ssps(),
-  period = list_gcm_periods(),
-  max_run = 0L,
   run_nm = NULL
 )
 
 input_gcm_hist(
-  dbCon,
-  bbox = NULL,
   gcms = list_gcms(),
   years = 1901:2014,
   max_run = 0L,
   cache = TRUE,
-  run_nm = NULL
-)
-
-input_gcm_hist_db(
-  dbCon,
-  gcms = list_gcms(),
-  years = 1901:2014,
-  max_run = 0L,
   run_nm = NULL
 )
 
 input_gcm_ssp(
-  dbCon,
-  bbox = NULL,
   gcms = list_gcms(),
   ssps = list_ssps(),
   years = 2020:2030,
   max_run = 0L,
   cache = TRUE,
-  run_nm = NULL,
-  fast = TRUE
-)
-
-input_gcm_ssp_db(
-  dbCon,
-  gcms = list_gcms(),
-  ssps = list_ssps(),
-  years = 2020:2030,
-  max_run = 0L,
   run_nm = NULL
 )
 }
 \arguments{
-\item{dbCon}{A db connection object created by \code{data_connect}.}
-
-\item{bbox}{numeric. Vector of length 4 giving bounding box of study region, in the order ymax,ymin,xmax,xmin. In general this is created by \code{get_bb()}, but can also be user-defined.}
-
 \item{gcms}{character. Vector of labels of the global circulation models to use.
 Can be obtained from \code{\link[=list_gcms]{list_gcms()}}. Default to all GCMs available.}
 
@@ -99,11 +59,9 @@ See \code{\link[=list_gcm_ssp_years]{list_gcm_ssp_years()}} for available years.
 A \code{list} of \code{SpatRasters}, each with possibly multiple layers, that can
 be used with \code{\link[=downscale_core]{downscale_core()}}.
 
-A \code{list} of \code{SpatRasters}, each with possibly multiple layers, that can
-be used with \code{\link[=downscale_core]{downscale_core()}}.
+An input list, with two nodes, \code{tbl} and \code{layers}, suitable for \code{extract_rast_tbl}.
 
-A \code{list} of \code{SpatRasters}, each with possibly multiple layers, that can
-be used with \code{\link[=downscale_core]{downscale_core()}}.
+An input list, with two nodes, \code{tbl} and \code{layers}, suitable for \code{extract_rast_tbl}.
 }
 \description{
 \code{input_gcms} retrieves anomalies of 20-year periods for selected GCMs, SSPs,
@@ -116,8 +74,7 @@ years and runs.
 years and runs.
 }
 \details{
-This function returns a list with one slot for each requested GCM. Rasters inside the list contain anomalies for all requested SSPs, runs, and periods.
-In general this function should only be used in combination with \code{\link[=downscale_core]{downscale_core()}}.
+An input list, with two nodes, \code{tbl} and \code{layers}, suitable for \code{extract_rast_tbl}.
 
 This function returns a list with one slot for each requested GCM. Rasters inside the list contain anomalies for all runs and years.
 In general this function should only be used in combination with \code{\link[=downscale_core]{downscale_core()}}.
@@ -125,24 +82,6 @@ In general this function should only be used in combination with \code{\link[=do
 This function returns a list with one slot for each requested GCM. Rasters inside the list contain anomalies for all SSPs, runs and years.
 In general this function should only be used in combination with \code{\link[=downscale_core]{downscale_core()}}. Note that if you request multiple runs, multiple SSPs, and a lot of years,
 it will take a while to download the data (there's lot of it).
-}
-\examples{
-library(terra)
-xyz <- data.frame(lon = runif(10, -140, -106), lat = runif(10, 37, 61), elev = runif(10), id = 1:10)
-
-## get bounding box based on input points
-thebb <- get_bb(xyz)
-
-## get database connection
-dbCon <- data_connect()
-
-gcms <- input_gcms(dbCon, thebb, list_gcms()[1], list_ssps()[1])
-
-## show ensemble means only
-lyrs <- grep("ensemble", names(gcms$`ACCESS-ESM1-5`))
-
-plot(gcms$`ACCESS-ESM1-5`[[lyrs]])
-pool::poolClose(dbCon)
 }
 \seealso{
 \code{\link[=downscale_core]{downscale_core()}}

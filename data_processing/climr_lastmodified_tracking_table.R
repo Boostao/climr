@@ -6,7 +6,7 @@ new_table_trigger <- function(table_name) {
     user = 'postgres',
     password = 'climr2022'
   ))
-  con <- climr::data_con("adm")
+  con <- climr::data_connect("adm")
   on.exit(climr::connections_clear())
   DBI::dbExecute(con, paste0("
     DO $$
@@ -52,7 +52,7 @@ climr:::.globals[["sessprof"]]$set("adm", list(
   user = 'postgres',
   password = 'climr2022'
 ))
-con <- climr::data_con("adm")
+con <- climr::data_connect("adm")
 
 DBI::dbExecute(con, "
 CREATE TABLE table_modification_log (

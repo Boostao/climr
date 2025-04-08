@@ -6,7 +6,7 @@ test_that("testing that the custom bilinear function works", {
     user = 'postgres',
     password = 'climr2022'
   ))
-  con<-climr::data_con("adm")
+  con<-climr::data_connect("adm")
   
   db_safe_exec("SET client_min_messages TO WARNING;")
   # Drop the table if it exists ----

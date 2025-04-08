@@ -6,11 +6,11 @@ new_table_constraints <- function(table_name, table_schema = "public") {
     user = 'postgres',
     password = 'climr2022'
   ))
-  con <- climr::data_con("adm")
+  con <- climr::data_connect("adm")
   on.exit(climr::connections_clear())
   climr:::with_retries(
     DBI::dbExecute(
-      climr::data_con(),
+      climr::data_connect(),
       "SELECT AddRasterConstraints('%s'::name,'%s'::name,'rast'::name);" |> sprintf(table_schema, table_name)
     )
   )
@@ -24,7 +24,7 @@ climr:::.globals[["sessprof"]]$set("adm", list(
   user = 'postgres',
   password = 'climr2022'
 ))
-con<-climr::data_con("adm")
+con<-climr::data_connect("adm")
 
 target_tb <- DBI::dbGetQuery(con, "
 SELECT table_schema, table_name
@@ -56,5 +56,5 @@ AND EXISTS (
 )
 ORDER BY table_schema, table_name;") |> data.table::setDT()
 
-target_tb[, climr:::with_retries(DBI::dbExecute(climr::data_con(), "SELECT AddRasterConstraints('%s'::name,'%s'::name,'rast'::name);" |> sprintf(table_schema, table_name))), by = .I]
+target_tb[, climr:::with_retries(DBI::dbExecute(climr::data_connect(), "SELECT AddRasterConstraints('%s'::name,'%s'::name,'rast'::name);" |> sprintf(table_schema, table_name))), by = .I]
 

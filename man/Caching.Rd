@@ -7,11 +7,7 @@
 \usage{
 cache_path()
 
-cache_clear(what = c("gcms", "gcmts", "gcmhist", "reference", "obs", "obs_ts"))
-}
-\arguments{
-\item{what}{character. Which data folders should be cleared?
-Accepts "reference", "gcms" or both.}
+cache_clear()
 }
 \value{
 character. The full path of the package local cache.
